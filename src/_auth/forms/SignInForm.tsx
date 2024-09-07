@@ -15,6 +15,7 @@ import {
   useSignInWithGoogleMutation,
 } from "@/lib/react-query/queriesAndMutations";
 import { checkIfEmailExists } from "@/functions/firebaseInputCheck";
+import { EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -196,16 +197,11 @@ const SignInForm = () => {
                           : setShowPassword(true)
                       }
                     >
-                      <img
-                        src={
-                          !showPassword
-                            ? "/assets/icons/eye.svg"
-                            : "/assets/icons/eye-slash.svg"
-                        }
-                        alt=""
-                        height={20}
-                        width={20}
-                      />
+                      {!showPassword ? (
+                        <EyeOpenIcon className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <EyeClosedIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </a>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import { useUserContext } from "@/context/authContext";
 import { useGetUserById } from "@/lib/react-query/queriesAndMutations";
 import { multiFormatDateString } from "@/lib/utils";
 import { IUploder } from "@/types";
+import { Edit } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -48,7 +49,7 @@ export const PostCard = ({ post }: any) => {
           to={`/update-post/${post.$id}`}
           className={`${user.id !== post.uploadedBy && "hidden"}`}
         >
-          <img src="/assets/icons/edit.svg" alt="edit" width={20} height={20} />
+          <Edit className="h-5 w-5" />
         </Link>
       </div>
 

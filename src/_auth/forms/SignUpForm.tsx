@@ -19,6 +19,7 @@ import {
   useSignInWithGoogleMutation,
 } from "@/lib/react-query/queriesAndMutations";
 import { auth } from "@/lib/firebase/config";
+import { EyeClosedIcon, EyeOpenIcon } from "@radix-ui/react-icons";
 
 const CreateAccountForm = () => {
   const navigate = useNavigate();
@@ -315,16 +316,11 @@ const CreateAccountForm = () => {
                           : setShowPassword(true)
                       }
                     >
-                      <img
-                        src={
-                          !showPassword
-                            ? "/assets/icons/eye.svg"
-                            : "/assets/icons/eye-slash.svg"
-                        }
-                        alt=""
-                        height={20}
-                        width={20}
-                      />
+                      {!showPassword ? (
+                        <EyeOpenIcon className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <EyeClosedIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </a>
                   </div>
                   <Label htmlFor="repeatPassword">RepeatPassword</Label>
@@ -352,16 +348,11 @@ const CreateAccountForm = () => {
                           : setShowRepeatPassword(true)
                       }
                     >
-                      <img
-                        src={
-                          !showRepeatPassword
-                            ? "/assets/icons/eye.svg"
-                            : "/assets/icons/eye-slash.svg"
-                        }
-                        alt=""
-                        height={20}
-                        width={20}
-                      />
+                      {!showPassword ? (
+                        <EyeOpenIcon className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <EyeClosedIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </a>
                   </div>
                 </div>
