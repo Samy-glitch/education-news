@@ -105,8 +105,7 @@ const News = () => {
                     >
                       <img
                         src={
-                          doc?.image ||
-                          "public/assets/images/news-placeholder.png"
+                          doc?.image || "/assets/images/news-placeholder.png"
                         }
                         alt="News cover"
                         width={100}
