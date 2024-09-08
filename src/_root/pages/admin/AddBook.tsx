@@ -178,7 +178,7 @@ const AddBook = () => {
   });
 
   const handleCancel = () => {
-    if (name || description || localImages?.[0]) {
+    if (name || description || localImages?.[0] || link || writer) {
       setCancelPreview(true);
     } else {
       navigate(`/admin/`);

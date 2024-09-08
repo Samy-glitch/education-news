@@ -27,6 +27,7 @@ import {
   INewsDataTable,
   INewses,
   INewUser,
+  IQnA,
 } from "@/types";
 import { auth, db, storage } from "./config";
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
@@ -239,8 +240,8 @@ export const getRecentNews = async (filter?: string): Promise<INewses[]> => {
 };
 
 export const likeNews = async (newsId: string, likesArray: string[]) => {
-  const bookRef = doc(db, "news", newsId);
-  await updateDoc(bookRef, {
+  const newsRef = doc(db, "news", newsId);
+  await updateDoc(newsRef, {
     likes: likesArray,
   }).catch((error) => {
     console.log(error);
@@ -251,10 +252,10 @@ export const likeNews = async (newsId: string, likesArray: string[]) => {
 export async function getNewsById(id: string): Promise<any> {
   try {
     const docRef = doc(db, "news", id);
-    const bookDoc = await getDoc(docRef);
+    const newsDoc = await getDoc(docRef);
 
-    if (bookDoc.exists()) {
-      return bookDoc.data();
+    if (newsDoc.exists()) {
+      return newsDoc.data();
     } else {
       console.log("News does not exist");
       return null;
@@ -328,6 +329,45 @@ export const unlikeBook = async (bookId: string, userId: string) => {
   }).catch((error) => {
     console.log(error);
   });
+};
+
+// Q&A
+
+export const fetchQnA = async (): Promise<IQnA[]> => {
+  const qnaCollection = collection(db, "qna");
+  const qnaSnapshot = await getDocs(qnaCollection);
+  const qnaList = qnaSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as IQnA[];
+  return qnaList;
+};
+
+export async function getQnAById(id: string): Promise<any> {
+  try {
+    const docRef = doc(db, "qna", id);
+    const qnaDoc = await getDoc(docRef);
+
+    if (qnaDoc.exists()) {
+      return qnaDoc.data();
+    } else {
+      console.log("Q&A does not exist");
+      return null;
+    }
+  } catch (error) {
+    console.error("Failed to fetch Q&A data:", error);
+    throw new Error("Failed to fetch Q&A data");
+  }
+}
+
+export const likeQnA = async (QnAId: string, likesArray: string[]) => {
+  const qnaRef = doc(db, "qna", QnAId);
+  await updateDoc(qnaRef, {
+    likes: likesArray,
+  }).catch((error) => {
+    console.log(error);
+  });
+  return QnAId;
 };
 
 export const uploadImages = async (

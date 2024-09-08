@@ -9,6 +9,7 @@ export { default as Other } from "./Other";
 export { default as Profile } from "./Profile";
 export { default as UpdateProfile } from "./UpdateProfile";
 export { default as NewsDetails } from "./NewsDetails";
+export { default as Question } from "./Question";
 export { default as LikedPosts } from "./LikedPosts";
 export { default as Settings } from "./Settings";
 export { default as Orders } from "./Orders";

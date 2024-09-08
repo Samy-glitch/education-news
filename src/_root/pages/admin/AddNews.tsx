@@ -173,14 +173,14 @@ const AddNews = () => {
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Please till the title",
+          title: "Please fill the title",
         });
         return;
       } else if (!content) {
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Please till the content",
+          title: "Please fill the content",
         });
         return;
       } else if (!type) {

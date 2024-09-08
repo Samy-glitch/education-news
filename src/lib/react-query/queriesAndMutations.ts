@@ -17,6 +17,9 @@ import {
   fetchDataTableBook,
   likeNews,
   getNewsById,
+  fetchQnA,
+  likeQnA,
+  getQnAById,
 } from "../firebase/api";
 import { IBookDataTable, INewsDataTable, INewUser } from "@/types";
 import { QUERY_KEYS } from "./queryKeys";
@@ -217,6 +220,51 @@ export const useLikeBook = () => {
     },
     onError: (error) => {
       console.error("Failed to update likes:", error);
+    },
+  });
+};
+
+// Q&A
+
+export const useGetQnA = () => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_QNAS],
+    queryFn: fetchQnA,
+  });
+};
+
+export const useGetQnAById = (id: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_QNA_BY_ID, id],
+    queryFn: () => getQnAById(id),
+    enabled: !!id,
+  });
+};
+
+export const useLikeQnA = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      qnaId,
+      likesArray,
+    }: {
+      qnaId: string;
+      likesArray: string[];
+    }) => likeQnA(qnaId, likesArray),
+    onSuccess: (qnaId) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_QNA_BY_ID, qnaId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_QNAS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_QNA],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
     },
   });
 };

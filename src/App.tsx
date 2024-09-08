@@ -24,6 +24,7 @@ import {
   AddBook,
   BookTable,
   FallBackPage,
+  Question,
 } from "./_root/pages";
 import SetUsername from "./_auth/forms/SetUsername";
 import SignInForm from "./_auth/forms/SignInForm";
@@ -63,6 +64,7 @@ const App = () => {
             <Route path="/home" element={<Home />} />
             <Route path="/news" element={<News />} />
             <Route path="/news-details/:id" element={<NewsDetails />} />
+            <Route path="/question/:id" element={<Question />} />
             <Route path="/q&a" element={<QandA />} />
             <Route path="/books" element={<Books />} />
             <Route path="/book/:id" element={<Book />} />

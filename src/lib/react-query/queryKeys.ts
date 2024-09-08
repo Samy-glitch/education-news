@@ -24,6 +24,12 @@ export enum QUERY_KEYS {
   GET_BOOKS = "getBooks",
   GET_BOOK_BY_ID = "getBookById",
 
+  // Q&A KEYS
+
+  GET_QNAS = "getQnas",
+  GET_QNA_BY_ID = "getQnaById",
+  GET_RECENT_QNA = "getRecentQna",
+
   //  SEARCH KEYS
   SEARCH_POSTS = "getSearchPosts",
 

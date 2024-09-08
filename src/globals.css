@@ -657,3 +657,21 @@
   height: 0;
   pointer-events: none;
 }
+
+.rti--container {
+  --rti-bg: "hsl(var(--muted) / 0.6)";
+  --rti-border: "transparent";
+  --rti-main: "#3182ce";
+  --rti-radius: "0.5rem";
+  --rti-tag: "#edf2f7";
+  --rti-tag-remove: "#e53e3e";
+  @apply !w-full !bg-muted/60 !rounded !resize-none !outline-none !border-0 !border-transparent !shadow-none;
+}
+
+.rti--input {
+  @apply !w-full h-16 p-2 pb-8 resize-none outline-none bg-transparent;
+}
+
+.rti--tag {
+  @apply !bg-accent !px-2;
+}

@@ -1,32 +1,32 @@
-import NewsLikes from "@/components/shared/NewsLikes";
+import Latex from "react-latex-next";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useUserContext } from "@/context/authContext";
-import { useGetNewsById } from "@/lib/react-query/queriesAndMutations";
+import { useGetQnAById } from "@/lib/react-query/queriesAndMutations";
 import { formatTimestamp } from "@/lib/utils";
-import { INews } from "@/types";
+import { IQnA } from "@/types";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Zoom from "react-medium-image-zoom";
-import Latex from "react-latex-next";
+import { useUserContext } from "@/context/authContext";
+import { QnAStats } from "@/components/shared/QnAStats";
 
-const NewsDetails = () => {
+const Question = () => {
   const { id } = useParams();
   const { user } = useUserContext();
-  const { data, error, isLoading } = useGetNewsById(id || "");
+  const { data, error, isLoading } = useGetQnAById(id || "");
 
-  const [news, setNews] = useState<INews | null>(null);
+  const [qna, setQna] = useState<IQnA | null>(null);
 
   useEffect(() => {
     if (data) {
-      setNews(data);
+      setQna(data);
     }
     if (error) {
       console.log(error);
     }
   }, [data, error]);
 
-  if (isLoading || !news || !id) {
+  if (isLoading || !qna || !id) {
     return (
       <div className="h-[50vh] w-full flex items-center justify-center">
         <p className="text-muted-foreground">Loading...</p>
@@ -37,30 +37,30 @@ const NewsDetails = () => {
   return (
     <div className="relative">
       <div className="space-y-0.5 relative">
-        <h2 className="text-2xl font-bold tracking-tight">{news.title}</h2>
+        <h2 className="text-2xl font-bold tracking-tight">{qna.title}</h2>
+        <div className="flex flex-wrap gap-2 py-1">
+          {qna.tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="rounded-md text-muted-foreground"
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
         <div className="text-muted-foreground text-sm md:text-base">
-          Uploded on {formatTimestamp(news.date)}
-          <Badge
-            variant="secondary"
-            className="capitalize rounded-md ml-2 md:ml-4"
-          >
-            {news.type}
-          </Badge>
+          {formatTimestamp(qna.date)}
         </div>
         <Separator className="!my-4" />
-        <NewsLikes
-          news={news}
-          newsId={id}
-          userId={user.id}
-          className="absolute top-0 right-0 md:text-xl"
-        />
       </div>
-      <div className="w-full h-full">
-        <Latex>{news.content}</Latex>
+      <div className="w-full h-full px-4">
+        <Latex>{qna.content}</Latex>
       </div>
+      <Separator className="!my-4" />
       <div className="flex flex-col">
-        {news.images.length > 0 &&
-          news.images.map((image) => (
+        {qna.images.length > 0 &&
+          qna.images.map((image) => (
             <div className="md:max-w-[600px] rounded-md" key={image}>
               <Zoom>
                 <img src={image} className="w-full h-full" />
@@ -68,8 +68,9 @@ const NewsDetails = () => {
             </div>
           ))}
       </div>
+      <QnAStats qna={qna} userId={user.id} className="px-0" />
     </div>
   );
 };
 
-export default NewsDetails;
+export default Question;

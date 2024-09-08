@@ -125,3 +125,18 @@ export type INewUser = {
   username: string;
   password: string;
 };
+
+export type IQnA = {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  image: string;
+  images: string[];
+  imagesPath: string[];
+  tags: string[];
+  isAnswered: boolean;
+  likes: string[];
+  date: Timestamp;
+  uploadedBy: string;
+};
