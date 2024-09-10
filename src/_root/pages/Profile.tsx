@@ -1,7 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -29,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/use-toast";
 import { useUserContext } from "@/context/authContext";
 import {
+  useGetPostsByUser,
   useGetUserById,
   useSignOutAccountMutation,
 } from "@/lib/react-query/queriesAndMutations";
@@ -38,18 +38,25 @@ import {
   Copy,
   Forward,
   LogOut,
-  MessageCircleIcon,
   QrCode,
   Settings2,
-  ThumbsUpIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { QRCodeDialog } from "@/components/shared/Dialogs";
+import PostCard from "@/components/shared/PostCard";
+import PostSkeleton from "@/components/skeletons/PostSkeleton";
+import { IUser } from "@/types";
+import PostCardById from "@/components/shared/PostCardById";
 
 const Profile = () => {
   const { id } = useParams();
   const { data, error, isLoading } = useGetUserById(id || "");
+  const {
+    data: posts,
+    isLoading: isPostsLoading,
+    isError: isPostsError,
+  } = useGetPostsByUser(id || "");
   const { user: currentUser } = useUserContext();
   const { mutate: signOut, isSuccess } = useSignOutAccountMutation();
   const navigate = useNavigate();
@@ -60,22 +67,14 @@ const Profile = () => {
     }
   }, [isSuccess]);
 
-  const [displayName, setDisplayName] = useState("");
-  const [userName, setUserName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [date, setDate] = useState("");
-  const [bio, setBio] = useState("");
+  const [user, setUser] = useState<IUser | null>(null);
   const [profilePrivew, setProfilePrivew] = useState(false);
   const [qrCodeDialog, setQrCodeDialog] = useState(false);
   const [logOutDialog, setLogOutDialog] = useState(false);
 
   useEffect(() => {
     if (data) {
-      setDisplayName(data.displayName || "");
-      setUserName(data.userName || "");
-      setImageUrl(data.photoURL || "");
-      setDate(data.date || "");
-      setBio(data.bio || "");
+      setUser(data);
     }
     if (error) {
       console.log(error);
@@ -97,10 +96,18 @@ const Profile = () => {
     }
   };
 
+  const TabValue = () => {
+    if (currentUser.uid !== id) {
+      return "posts";
+    } else {
+      return undefined;
+    }
+  };
+
   return (
     <div className="grid gap-6">
-      <Card>
-        <CardHeader>
+      <div className="border-0">
+        <div className="p-4">
           <div className="flex md:items-center flex-col md:flex-row justify-between">
             <div className="flex items-center gap-4 md:gap-6 font-onest">
               <a
@@ -108,8 +115,10 @@ const Profile = () => {
                 className="cursor-pointer hover:opacity-80 transition-opacity relative"
               >
                 <Avatar className="h-20 w-20 overflow-hidden rounded-full border">
-                  <AvatarImage src={imageUrl} alt="Avatar" />
-                  <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+                  <AvatarImage src={user?.photoURL} alt="Avatar" />
+                  <AvatarFallback>
+                    {getInitials(user?.displayName || "")}
+                  </AvatarFallback>
                 </Avatar>
               </a>
               <div className="grid gap-1.5">
@@ -120,19 +129,21 @@ const Profile = () => {
                   </>
                 ) : (
                   <>
-                    <div className="text-xl font-semibold">{displayName}</div>
+                    <div className="text-xl font-semibold">
+                      {user?.displayName}
+                    </div>
                     <div className="text-base text-muted-foreground">
-                      {userName}
+                      {user?.displayName}
                     </div>
                   </>
                 )}
               </div>
             </div>
             <div className="flex gap-2 mt-4 md:mt-0 ml-auto md:ml-0">
-              {currentUser.id === id && (
+              {currentUser.uid === id && (
                 <Button
                   className="w-fit"
-                  onClick={() => navigate(`/edit-profile/${currentUser.id}`)}
+                  onClick={() => navigate(`/edit-profile/${currentUser.uid}`)}
                   variant="outline"
                 >
                   Edit Profile
@@ -157,7 +168,7 @@ const Profile = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
                   <DropdownMenuGroup>
-                    {currentUser.id === id && (
+                    {currentUser.uid === id && (
                       <DropdownMenuItem onClick={() => navigate("/settings")}>
                         <Settings2 className="mr-2 h-4 w-4" />
                         <span>Preferences</span>
@@ -183,14 +194,14 @@ const Profile = () => {
                         </DropdownMenuSubContent>
                       </DropdownMenuPortal>
                     </DropdownMenuSub>
-                    {currentUser.id !== id && (
+                    {currentUser.uid !== id && (
                       <DropdownMenuItem>
                         <AlertCircle className="mr-2 h-4 w-4" />
                         <span>Report</span>
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuGroup>
-                  {currentUser.id === id && (
+                  {currentUser.uid === id && (
                     <>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => setLogOutDialog(true)}>
@@ -203,15 +214,14 @@ const Profile = () => {
               </DropdownMenu>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div>
           {isLoading ? (
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Skeleton className="h-6 w-[120px]" />
                 <Skeleton className="h-5 w-[180px]" />
               </div>
-              <Separator />
               <div className="grid gap-2">
                 <Skeleton className="h-6 w-[120px]" />
                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -219,7 +229,6 @@ const Profile = () => {
                   <Skeleton className="h-5 w-[50px]" />
                 </div>
               </div>
-              <Separator />
               <div className="grid gap-2">
                 <Skeleton className="h-6 w-[120px]" />
                 <Skeleton className="h-5 w-[180px]" />
@@ -227,7 +236,7 @@ const Profile = () => {
             </div>
           ) : (
             <div className="grid gap-4">
-              {currentUser.badges && (
+              {currentUser.badges && currentUser.badges.length > 0 && (
                 <>
                   <div className="grid gap-2">
                     <h3 className="text-lg font-semibold">Badges</h3>
@@ -239,236 +248,71 @@ const Profile = () => {
                       ))}
                     </div>
                   </div>
-                  <Separator />
                 </>
               )}
-              {bio && (
+              {user?.bio && (
                 <>
                   <div className="grid gap-2">
                     <h3 className="text-lg font-semibold">About</h3>
-                    <p className="text-muted-foreground line-clamp-6">{bio}</p>
+                    <p className="text-muted-foreground line-clamp-6">
+                      {user.bio}
+                    </p>
                   </div>
-                  <Separator />
                 </>
               )}
               <div className="grid gap-2">
                 <h3 className="text-lg font-semibold">Joined</h3>
-                <div className="text-muted-foreground">{formatDate(date)}</div>
+                <div className="text-muted-foreground">
+                  {formatDate(user?.date)}
+                </div>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-      <Card>
-        {isLoading ? (
-          <CardHeader>
-            <CardTitle className="mb-8">
-              <Skeleton className="h-8 w-[70px]" />
-            </CardTitle>
-            <div className="grid gap-4">
-              <div className="flex items-start gap-4">
-                <Skeleton className="h-10 w-10 overflow-hidden rounded-full" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Skeleton className="h-6 w-[250px] md:w-[300px]" />
-                      <div className="mt-2 flex gap-2">
-                        <Skeleton className="h-5 w-[50px]" />
-                        <Skeleton className="h-5 w-[80px]" />
-                        <Skeleton className="h-5 w-[70px]" />
-                      </div>
-                    </div>
+        </div>
+      </div>
+      <Separator className="hidden md:block" />
+      <div className="border-0">
+        <div className="p-4">
+          <Tabs defaultValue="posts" className="w-full" value={TabValue()}>
+            <TabsList className="mb-2 md:mb-4">
+              <TabsTrigger value="posts">Posts</TabsTrigger>
+              {currentUser.uid === id && (
+                <TabsTrigger value="saved">Saved Posts</TabsTrigger>
+              )}
+            </TabsList>
+            <Separator className="md:hidden my-2" />
+            <TabsContent value="posts">
+              <div className="flex flex-col gap-4">
+                {isPostsLoading || isPostsError ? (
+                  <>
+                    <PostSkeleton />
+                    <PostSkeleton />
+                  </>
+                ) : posts && posts.length > 0 ? (
+                  posts.map((post) => <PostCard post={post} key={post.id} />)
+                ) : (
+                  <div className="h-[20vh] w-full flex items-center justify-center">
+                    <p className="text-muted-foreground">No posts yet.</p>
                   </div>
-                  <div className="mt-2">
-                    <Skeleton className="h-4 w-[250px]" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <Skeleton className="h-10 w-10 overflow-hidden rounded-full" />
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Skeleton className="h-6 w-[280px] md:w-[350px]" />
-                      <div className="mt-2 flex gap-2">
-                        <Skeleton className="h-5 w-[70px]" />
-                        <Skeleton className="h-5 w-[50px]" />
-                        <Skeleton className="h-5 w-[80px]" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <Skeleton className="h-4 w-[200px]" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-        ) : (
-          <CardHeader>
-            <Tabs defaultValue="qa" className="w-full">
-              <TabsList className="border-b">
-                <TabsTrigger value="qa">Q&A</TabsTrigger>
-                {currentUser.id === id && (
-                  <TabsTrigger value="saved">Saved Q&A</TabsTrigger>
                 )}
-              </TabsList>
-              <TabsContent value="qa">
-                <div className="grid gap-4">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-10 w-10 overflow-hidden rounded-full border">
-                      <AvatarImage
-                        src="/assets/icons/profile-placeholder.svg"
-                        alt="Avatar"
-                      />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">
-                            How to implement a custom pagination component in
-                            React?
-                          </h3>
-                          <div className="mt-2 flex gap-2">
-                            <Badge variant="outline">react</Badge>
-                            <Badge variant="outline">pagination</Badge>
-                            <Badge variant="outline">frontend</Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <ThumbsUpIcon className="h-4 w-4" />
-                          <span>42</span>
-                          <MessageCircleIcon className="h-4 w-4" />
-                          <span>12</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-muted-foreground">
-                        Asked 2 hours ago by{" "}
-                        <Link to="#" className="font-medium hover:underline">
-                          John Doe
-                        </Link>
-                      </div>
-                    </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="saved">
+              <div className="flex flex-col gap-4">
+                {user?.savedPosts && user.savedPosts.length > 0 ? (
+                  user.savedPosts.map((postId) => (
+                    <PostCardById key={postId} postId={postId} />
+                  ))
+                ) : (
+                  <div className="h-[20vh] w-full flex items-center justify-center">
+                    <p className="text-muted-foreground">No posts saved.</p>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-10 w-10 overflow-hidden rounded-full border">
-                      <AvatarImage
-                        src="/assets/icons/profile-placeholder.svg"
-                        alt="Avatar"
-                      />
-                      <AvatarFallback>SA</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">
-                            Best practices for writing clean and maintainable
-                            SQL queries
-                          </h3>
-                          <div className="mt-2 flex gap-2">
-                            <Badge variant="outline">sql</Badge>
-                            <Badge variant="outline">database</Badge>
-                            <Badge variant="outline">performance</Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <ThumbsUpIcon className="h-4 w-4" />
-                          <span>68</span>
-                          <MessageCircleIcon className="h-4 w-4" />
-                          <span>24</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-muted-foreground">
-                        Asked 1 day ago by{" "}
-                        <Link to="#" className="font-medium hover:underline">
-                          Sarah Anderson
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="saved">
-                <div className="grid gap-4">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-10 w-10 overflow-hidden rounded-full border">
-                      <AvatarImage
-                        src="/assets/icons/profile-placeholder.svg"
-                        alt="Avatar"
-                      />
-                      <AvatarFallback>MJ</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">
-                            Optimizing React component performance with
-                            memoization
-                          </h3>
-                          <div className="mt-2 flex gap-2">
-                            <Badge variant="outline">react</Badge>
-                            <Badge variant="outline">performance</Badge>
-                            <Badge variant="outline">optimization</Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <ThumbsUpIcon className="h-4 w-4" />
-                          <span>92</span>
-                          <MessageCircleIcon className="h-4 w-4" />
-                          <span>18</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-muted-foreground">
-                        Asked 3 days ago by{" "}
-                        <Link to="#" className="font-medium hover:underline">
-                          Michael Johnson
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-10 w-10 overflow-hidden rounded-full border">
-                      <AvatarImage
-                        src="/assets/icons/profile-placeholder.svg"
-                        alt="Avatar"
-                      />
-                      <AvatarFallback>EW</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">
-                            Implementing a real-time chat application with
-                            WebSockets
-                          </h3>
-                          <div className="mt-2 flex gap-2">
-                            <Badge variant="outline">websockets</Badge>
-                            <Badge variant="outline">chat</Badge>
-                            <Badge variant="outline">real-time</Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <ThumbsUpIcon className="h-4 w-4" />
-                          <span>74</span>
-                          <MessageCircleIcon className="h-4 w-4" />
-                          <span>32</span>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-muted-foreground">
-                        Asked 1 week ago by{" "}
-                        <Link to="#" className="font-medium hover:underline">
-                          Emily Wilson
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardHeader>
-        )}
-      </Card>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
       <QRCodeDialog
         open={qrCodeDialog}
         onOpenChange={setQrCodeDialog}
@@ -503,8 +347,8 @@ const Profile = () => {
         <DialogContent className="sm:max-w-[425px] bg-transparent border-0">
           <div>
             <img
-              src={imageUrl}
-              alt={displayName}
+              src={user?.photoURL}
+              alt={user?.displayName}
               width={400}
               height={400}
               className="rounded-full object-cover"

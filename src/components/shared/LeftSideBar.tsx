@@ -61,27 +61,29 @@ const LeftSideBar = () => {
       <div className="mt-auto">
         {isAuthenticated ? (
           <Link
-            to={`/profile/${currentUser.id}`}
+            to={`/profile/${currentUser.uid}`}
             className={`flex gap-3 items-center transition-colors hover:bg-nav-2 p-2 rounded-lg ${
-              pathname === `/profile/${currentUser.id}` ? "bg-nav-1" : ""
+              pathname === `/profile/${currentUser.uid}` ? "bg-nav-1" : ""
             } ripple-button`}
             onClick={createRipple}
           >
             <Avatar className="h-10 w-10 overflow-hidden rounded-full border">
               <AvatarImage
-                src={currentUser.imageUrl}
+                src={currentUser.photoURL}
                 alt="Avatar"
                 className="object-cover"
               />
-              <AvatarFallback>{getInitials(currentUser.name)}</AvatarFallback>
+              <AvatarFallback>
+                {getInitials(currentUser.displayName)}
+              </AvatarFallback>
             </Avatar>
             <div className="flex flex-col font-onest">
               <p className="text-sm line-clamp-1 text-ellipsis break-anywhere overflow-hidden whitespace-normal">
-                {currentUser.name}
+                {currentUser.displayName}
               </p>
-              {currentUser.username && (
+              {currentUser.userName && (
                 <p className="text-[12px] text-light-3 line-clamp-1 text-ellipsis break-anywhere overflow-hidden whitespace-normal">
-                  {currentUser.username}
+                  {currentUser.userName}
                 </p>
               )}
             </div>

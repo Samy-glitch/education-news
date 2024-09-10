@@ -8,9 +8,11 @@ import {
   updateProfile,
 } from "firebase/auth";
 import {
+  addDoc,
   arrayRemove,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -24,13 +26,22 @@ import {
 import {
   IBookDataTable,
   IBooks,
+  ICreatePost,
   INewsDataTable,
   INewses,
   INewUser,
-  IQnA,
+  IPost,
+  IUser,
 } from "@/types";
 import { auth, db, storage } from "./config";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import {
+  deleteObject,
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
+import { orderByDate } from "../utils";
 
 export async function createUserAccount(user: INewUser) {
   try {
@@ -109,8 +120,10 @@ export async function saveUserToDB(user: {
       emailVerified: false,
       phoneNumber: "",
       orders: 0,
+      savedPosts: [],
       type: "emailLogin",
       rank: "free",
+      isAadmin: false,
       date: new Date(),
     }).catch((err: { message: string }) => {
       console.log(err.message);
@@ -138,16 +151,16 @@ export async function signInAccount(user: { email: string; password: string }) {
   }
 }
 
-export async function getUserById(uid: string): Promise<any> {
+export async function getUserById(uid: string): Promise<IUser | null> {
   try {
     const docRef = doc(db, "users", uid);
     const userDoc = await getDoc(docRef);
 
     if (userDoc.exists()) {
-      return userDoc.data(); // Return the user data
+      return userDoc.data() as IUser;
     } else {
       console.log("User document does not exist");
-      return null; // User not found
+      return null;
     }
   } catch (error) {
     console.error("Failed to fetch user data:", error);
@@ -202,15 +215,88 @@ export async function uploadUserImageToFirebase(
   }
 }
 
+// Posts
+
 export async function getRecentPosts() {
-  const colRef = collection(db, "hpost");
+  const colRef = collection(db, "posts");
   const q = query(colRef, orderBy("order", "desc"));
+  const postSnapshot = await getDocs(q);
+  const postList = postSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as IPost[];
+  if (!postList) throw Error;
 
-  const posts = await getDocs(q);
+  return postList;
+}
 
-  if (!posts) throw Error;
+export async function getPostById(id: string): Promise<IPost | null> {
+  try {
+    const docRef = doc(db, "posts", id);
+    const postDoc = await getDoc(docRef);
 
-  return posts;
+    if (postDoc.exists()) {
+      return postDoc.data() as IPost;
+    } else {
+      console.log("Post does not exist");
+      return null;
+    }
+  } catch (error) {
+    console.error("Failed to fetch post data:", error);
+    throw new Error("Failed to fetch post data");
+  }
+}
+
+export const likePost = async (post: string, likesArray: string[]) => {
+  const postRef = doc(db, "posts", post);
+  await updateDoc(postRef, {
+    likes: likesArray,
+  }).catch((error) => {
+    console.log(error);
+  });
+  return post;
+};
+
+export const SavePost = async (userId: string, PostsArray: string[]) => {
+  const userRef = doc(db, "users", userId);
+  await updateDoc(userRef, {
+    savedPosts: PostsArray,
+  }).catch((error) => {
+    console.log(error);
+  });
+  return userId;
+};
+
+export const createPost = async (postData: ICreatePost) => {
+  try {
+    const postsCollectionRef = collection(db, "posts");
+
+    const newPost = await addDoc(postsCollectionRef, {
+      ...postData,
+      order: orderByDate(),
+    });
+    return newPost;
+  } catch (error) {
+    console.error("Error adding document: ", error);
+    throw new Error("Failed to create post");
+  }
+};
+
+export async function getPostsByUser(userId: string) {
+  const colRef = collection(db, "posts");
+  const q = query(
+    colRef,
+    orderBy("order", "desc"),
+    where("uploadedBy", "==", userId)
+  );
+  const postSnapshot = await getDocs(q);
+  const postList = postSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  })) as IPost[];
+  if (!postList) throw Error;
+
+  return postList;
 }
 
 // News
@@ -331,45 +417,6 @@ export const unlikeBook = async (bookId: string, userId: string) => {
   });
 };
 
-// Q&A
-
-export const fetchQnA = async (): Promise<IQnA[]> => {
-  const qnaCollection = collection(db, "qna");
-  const qnaSnapshot = await getDocs(qnaCollection);
-  const qnaList = qnaSnapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as IQnA[];
-  return qnaList;
-};
-
-export async function getQnAById(id: string): Promise<any> {
-  try {
-    const docRef = doc(db, "qna", id);
-    const qnaDoc = await getDoc(docRef);
-
-    if (qnaDoc.exists()) {
-      return qnaDoc.data();
-    } else {
-      console.log("Q&A does not exist");
-      return null;
-    }
-  } catch (error) {
-    console.error("Failed to fetch Q&A data:", error);
-    throw new Error("Failed to fetch Q&A data");
-  }
-}
-
-export const likeQnA = async (QnAId: string, likesArray: string[]) => {
-  const qnaRef = doc(db, "qna", QnAId);
-  await updateDoc(qnaRef, {
-    likes: likesArray,
-  }).catch((error) => {
-    console.log(error);
-  });
-  return QnAId;
-};
-
 export const uploadImages = async (
   imageBlobs: Blob[],
   folderPath: string
@@ -383,4 +430,47 @@ export const uploadImages = async (
   });
 
   return Promise.all(uploadPromises);
+};
+
+export const deleteFiles = async (filePaths: string[]): Promise<void[]> => {
+  const deletePromises = filePaths.map((path) => {
+    const fileRef = ref(storage, path);
+    return deleteObject(fileRef);
+  });
+
+  try {
+    return await Promise.all(deletePromises);
+  } catch (error) {
+    console.error("Error deleting files:", error);
+    throw error;
+  }
+};
+
+export const deleteDocumentWithFiles = async (
+  collectionName: string,
+  docId: string
+): Promise<void> => {
+  const docRef = doc(db, collectionName, docId);
+
+  try {
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const docData = docSnap.data();
+      if (docData.imagesPath && Array.isArray(docData.imagesPath)) {
+        await deleteFiles(docData.imagesPath);
+        console.log("Files deleted successfully");
+      }
+
+      await deleteDoc(docRef);
+      console.log(
+        `Document with ID ${docId} from collection ${collectionName} deleted successfully.`
+      );
+    } else {
+      console.log("No such document found!");
+    }
+  } catch (error) {
+    console.error("Error deleting document and files:", error);
+    throw error;
+  }
 };

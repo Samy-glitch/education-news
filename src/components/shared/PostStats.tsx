@@ -1,22 +1,23 @@
-import { useLikeQnA } from "@/lib/react-query/queriesAndMutations";
+import { useLikePost } from "@/lib/react-query/queriesAndMutations";
 import { checkIsLiked, cn, formatNumber } from "@/lib/utils";
-import { IQnA } from "@/types";
+import { IPost } from "@/types";
 import { Heart, MessageCircleIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { ClassNameValue } from "tailwind-merge";
+import { toast } from "../ui/use-toast";
 
-export const QnAStats = ({
-  qna,
+export const PostStats = ({
+  post,
   userId,
   className,
 }: {
-  qna: IQnA;
+  post: IPost;
   userId: string;
   className?: ClassNameValue;
 }) => {
-  const likesList = qna.likes;
+  const likesList = post.likes;
 
-  const { mutate: likeQna } = useLikeQnA();
+  const { mutate: likePost } = useLikePost();
 
   const [likes, setLikes] = useState(likesList);
   const likeButtonRef = useRef<SVGSVGElement | null>(null);
@@ -24,21 +25,24 @@ export const QnAStats = ({
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
 
-    if (userId) {
-      let newLikes = [...likes];
-      const hasLiked = newLikes.includes(userId);
-
-      if (hasLiked) {
-        likeButtonRef.current?.classList.remove("likePulse");
-        newLikes = newLikes.filter((id) => id !== userId);
-      } else {
-        likeButtonRef.current?.classList.add("likePulse");
-        newLikes.push(userId);
-      }
-
-      setLikes(newLikes);
-      likeQna({ qnaId: qna.id, likesArray: newLikes });
+    if (!userId) {
+      toast({ description: "Please log in to like posts." });
+      return;
     }
+
+    let newLikes = [...likes];
+    const hasLiked = newLikes.includes(userId);
+
+    if (hasLiked) {
+      likeButtonRef.current?.classList.remove("likePulse");
+      newLikes = newLikes.filter((id) => id !== userId);
+    } else {
+      likeButtonRef.current?.classList.add("likePulse");
+      newLikes.push(userId);
+    }
+
+    setLikes(newLikes);
+    likePost({ postId: post.id, likesArray: newLikes });
   };
   return (
     <div className={cn("px-4 pt-5 flex items-center", className)}>

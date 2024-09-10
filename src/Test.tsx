@@ -1,56 +1,63 @@
-import React, { useState, useEffect } from "react";
 import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
+  collection,
+  getDocs,
+  doc,
+  Timestamp,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "./lib/firebase/config";
+import { Button } from "./components/ui/button";
 
 const YearSelect = () => {
-  const [years, setYears] = useState<number[]>([]);
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  const orderByDate = (timestamp: Timestamp): String => {
+    const date = timestamp.toDate();
+    const year = date.getFullYear().toString(); // Full year (e.g., 2024)
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month, padded to 2 digits
+    const day = date.getDate().toString().padStart(2, "0"); // Day, padded to 2 digits
+    const hours = date.getHours().toString().padStart(2, "0"); // Hours, padded to 2 digits
+    const minutes = date.getMinutes().toString().padStart(2, "0"); // Minutes, padded to 2 digits
 
-  useEffect(() => {
-    const currentYear = new Date().getFullYear();
-    const startYear = 1990; // Set the lowest year to 1990
-    const yearsArray = [];
-
-    for (let i = startYear; i <= currentYear; i++) {
-      yearsArray.push(i);
-    }
-
-    setYears(yearsArray);
-  }, []);
-
-  const handleYearChange = (year: number) => {
-    setSelectedYear(year);
-
-    // Auto-add new year if not in list
-    const currentYear = new Date().getFullYear();
-    if (year === currentYear && !years.includes(currentYear + 1)) {
-      setYears([...years, currentYear + 1]);
-    }
+    return `${year}${month}${day}${hours}${minutes}`;
   };
 
+  async function migrateQnaToPosts() {
+    try {
+      const qnaCollectionRef = collection(db, "users");
+
+      const qnaSnapshot = await getDocs(qnaCollectionRef);
+
+      for (const qnaDoc of qnaSnapshot.docs) {
+        const qnaData = qnaDoc.data();
+
+        const postsDocRef = doc(db, "users", qnaDoc.id);
+
+        const postData = {
+          ...qnaData,
+          badges: qnaData.badges || [],
+        };
+
+        await updateDoc(postsDocRef, postData);
+
+        console.log(`Migrated document ID: ${qnaDoc.id}`);
+      }
+
+      console.log("Migration completed successfully!");
+    } catch (error) {
+      console.error("Error migrating data:", error);
+    }
+  }
+
+  // const testDate = "3 June 2024";
+  // const newTestDate = new Date(testDate);
+
+  // console.log(newTestDate);
+
   return (
-    <Select
-      onValueChange={(value) => handleYearChange(Number(value))}
-      defaultValue={String(selectedYear)}
-    >
-      <SelectTrigger>
-        <SelectValue>{selectedYear}</SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {years.map((year) => (
-          <SelectItem key={year} value={String(year)}>
-            {year}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="h-[80vh] w-full flex-start">
+      <Button className="mx-auto" /* onClick={migrateQnaToPosts} */>
+        Start
+      </Button>
+    </div>
   );
 };
 

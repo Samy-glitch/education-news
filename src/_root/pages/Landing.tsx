@@ -51,17 +51,19 @@ const Landing = () => {
             <div className="ml-auto flex items-center gap-2 sm:gap-4">
               {isAuthenticated && (
                 <Link
-                  to={`/profile/${user.id}`}
+                  to={`/profile/${user.uid}`}
                   onMouseEnter={() => setIsCursorHover(true)}
                   onMouseLeave={() => setIsCursorHover(false)}
                 >
                   <Avatar className="h-8 w-8 overflow-hidden rounded-full">
                     <AvatarImage
-                      src={user.imageUrl}
+                      src={user.photoURL}
                       alt="Avatar"
                       className="object-cover"
                     />
-                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                    <AvatarFallback>
+                      {getInitials(user.displayName)}
+                    </AvatarFallback>
                   </Avatar>
                 </Link>
               )}

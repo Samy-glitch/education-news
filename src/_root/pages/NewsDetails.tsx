@@ -51,12 +51,12 @@ const NewsDetails = () => {
         <NewsLikes
           news={news}
           newsId={id}
-          userId={user.id}
+          userId={user.uid}
           className="absolute top-0 right-0 md:text-xl"
         />
       </div>
-      <div className="w-full h-full">
-        <Latex>{news.content}</Latex>
+      <div className="w-full h-full tiptap-content">
+        {news.content && <Latex>{news.content}</Latex>}
       </div>
       <div className="flex flex-col">
         {news.images.length > 0 &&

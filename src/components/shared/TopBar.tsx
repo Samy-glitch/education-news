@@ -94,6 +94,7 @@ const TopBar = () => {
             size="icon"
             className="rounded-full min-w-[36px]"
             type="submit"
+            aria-label="Search"
           >
             <SearchIcon className="h-5 w-5" />
           </Button>
@@ -115,14 +116,14 @@ const TopBar = () => {
 
         <div className="md:hidden">
           {isAuthenticated ? (
-            <Link to={`/profile/${user.id}`}>
+            <Link to={`/profile/${user.uid}`}>
               <Avatar className="h-8 w-8 overflow-hidden rounded-full border">
                 <AvatarImage
-                  src={user.imageUrl}
+                  src={user.photoURL}
                   alt="Avatar"
                   className="object-cover"
                 />
-                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
               </Avatar>
             </Link>
           ) : (

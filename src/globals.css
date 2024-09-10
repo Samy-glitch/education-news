@@ -352,12 +352,22 @@
     }
   }
 
+  .message-layout {
+    @apply flex w-full overflow-hidden md:border rounded-md;
+    height: calc(100vh - 12rem);
+  }
+
   @media (min-width: 768px) {
     .admin-image-calc {
       width: calc(100% - 240px);
     }
     .book-card {
       max-height: calc(100vh - 112px);
+    }
+    .message-layout {
+      display: flex;
+      width: 100%;
+      height: calc(100vh - 9.5rem);
     }
   }
 
@@ -629,7 +639,13 @@
 }
 
 .tiptap-content iframe {
-  @apply rounded-md;
+  @apply rounded-md my-4;
+}
+
+@media (max-width: 926px) {
+  .tiptap-content iframe {
+    @apply aspect-video w-full h-auto;
+  }
 }
 
 .tiptap-group {
@@ -669,7 +685,7 @@
 }
 
 .rti--input {
-  @apply !w-full h-16 p-2 pb-8 resize-none outline-none bg-transparent;
+  @apply !w-full h-16 pb-8 pr-2 resize-none outline-none bg-transparent;
 }
 
 .rti--tag {

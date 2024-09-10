@@ -4,6 +4,7 @@ import { INewses } from "@/types";
 import { Heart, MessageCircleIcon } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { ClassNameValue } from "tailwind-merge";
+import { toast } from "../ui/use-toast";
 
 type NewsProps = {
   news: INewses;
@@ -22,21 +23,23 @@ const NewsStats = ({ news, userId, className }: NewsProps) => {
   const handleLike = (e: React.MouseEvent) => {
     e.preventDefault();
 
-    if (userId) {
-      let newLikes = [...likes];
-      const hasLiked = newLikes.includes(userId);
-
-      if (hasLiked) {
-        likeButtonRef.current?.classList.remove("likePulse");
-        newLikes = newLikes.filter((id) => id !== userId);
-      } else {
-        likeButtonRef.current?.classList.add("likePulse");
-        newLikes.push(userId);
-      }
-
-      setLikes(newLikes);
-      likeNews({ newsId: news.id, likesArray: newLikes });
+    if (!userId) {
+      toast({ description: "Please log in to like news." });
+      return;
     }
+    let newLikes = [...likes];
+    const hasLiked = newLikes.includes(userId);
+
+    if (hasLiked) {
+      likeButtonRef.current?.classList.remove("likePulse");
+      newLikes = newLikes.filter((id) => id !== userId);
+    } else {
+      likeButtonRef.current?.classList.add("likePulse");
+      newLikes.push(userId);
+    }
+
+    setLikes(newLikes);
+    likeNews({ newsId: news.id, likesArray: newLikes });
   };
 
   return (

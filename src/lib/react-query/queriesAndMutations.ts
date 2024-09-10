@@ -17,9 +17,12 @@ import {
   fetchDataTableBook,
   likeNews,
   getNewsById,
-  fetchQnA,
-  likeQnA,
-  getQnAById,
+  likePost,
+  getPostById,
+  createPost,
+  getPostsByUser,
+  SavePost,
+  deleteDocumentWithFiles,
 } from "../firebase/api";
 import { IBookDataTable, INewsDataTable, INewUser } from "@/types";
 import { QUERY_KEYS } from "./queryKeys";
@@ -87,33 +90,83 @@ export const useGetRecentPosts = () => {
   });
 };
 
-// export const useLikePost = () => {
-//   const queryClient = useQueryClient();
+export const useGetPostById = (id: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_POST_BY_ID, id],
+    queryFn: () => getPostById(id),
+    enabled: !!id,
+  });
+};
 
-//   return useMutation({
-//     mutationFn: ({
-//       postId,
-//       likesArray,
-//     }: {
-//       postId: string;
-//       likesArray: string[];
-//     }) => likePost(postId, likesArray),
-//     onSuccess: (data) => {
-//       queryClient.invalidateQueries({
-//         queryKey: [QUERY_KEYS.GET_POST_BY_ID, data?.$id],
-//       });
-//       queryClient.invalidateQueries({
-//         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
-//       });
-//       queryClient.invalidateQueries({
-//         queryKey: [QUERY_KEYS.GET_POSTS],
-//       });
-//       queryClient.invalidateQueries({
-//         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
-//       });
-//     },
-//   });
-// };
+export const useLikePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      postId,
+      likesArray,
+    }: {
+      postId: string;
+      likesArray: string[];
+    }) => likePost(postId, likesArray),
+    onSuccess: (postId) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+      });
+    },
+  });
+};
+
+export const useSavePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userId,
+      postsArray,
+    }: {
+      userId: string;
+      postsArray: string[];
+    }) => SavePost(userId, postsArray),
+    onSuccess: (uid) => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_CURRENT_USER, uid],
+      });
+    },
+  });
+};
+
+export const useCreatePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(createPost, {
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
+      });
+    },
+    onError: (error: any) => {
+      console.error("Error creating post:", error);
+    },
+  });
+};
+
+export const useGetPostsByUser = (userId: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.GET_POSTS_BY_USER, userId],
+    queryFn: () => getPostsByUser(userId),
+    enabled: !!userId,
+  });
+};
 
 // News
 
@@ -224,47 +277,17 @@ export const useLikeBook = () => {
   });
 };
 
-// Q&A
-
-export const useGetQnA = () => {
-  return useQuery({
-    queryKey: [QUERY_KEYS.GET_QNAS],
-    queryFn: fetchQnA,
-  });
-};
-
-export const useGetQnAById = (id: string) => {
-  return useQuery({
-    queryKey: [QUERY_KEYS.GET_QNA_BY_ID, id],
-    queryFn: () => getQnAById(id),
-    enabled: !!id,
-  });
-};
-
-export const useLikeQnA = () => {
+export const useDeleteDocumentWithFiles = (collectionName: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      qnaId,
-      likesArray,
-    }: {
-      qnaId: string;
-      likesArray: string[];
-    }) => likeQnA(qnaId, likesArray),
-    onSuccess: (qnaId) => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.GET_QNA_BY_ID, qnaId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.GET_QNAS],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.GET_RECENT_QNA],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.GET_CURRENT_USER],
-      });
+    mutationFn: (docId: string) =>
+      deleteDocumentWithFiles(collectionName, docId),
+    onSuccess: () => {
+      queryClient.invalidateQueries([collectionName]);
+    },
+    onError: (error) => {
+      console.error("Error during document deletion:", error);
     },
   });
 };

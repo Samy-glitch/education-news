@@ -23,7 +23,7 @@ export const BookCard = ({ book }: { book: IBooks }) => {
             <img
               src={book.image}
               alt="book cover"
-              className="h-full w-full absolute rounded-md"
+              className="h-full w-full absolute rounded-md object-cover"
             />
           </div>
           <div className="absolute px-2 pt-1 pb-2 -bottom-1 -right-1 bg-muted/90 shadow-md rounded-md text-sm">

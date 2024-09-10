@@ -86,7 +86,7 @@ const Search = () => {
                 </div>
               </div>
             </div>
-            <Button type="submit" className="search-button">
+            <Button type="submit" className="search-button" aria-label="Search">
               Search
             </Button>
           </form>
@@ -95,7 +95,7 @@ const Search = () => {
               queryParameters.get("q")?.trim() !== "" && "hidden"
             }`}
           >
-            Search for news, books, or Q&As quickly and easily.
+            Search for news, books, or Posts quickly and easily.
           </p>
         </div>
       </div>

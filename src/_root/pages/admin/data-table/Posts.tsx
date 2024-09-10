@@ -5,6 +5,7 @@ import {
   IdCardIcon,
   MixerHorizontalIcon,
   Pencil2Icon,
+  PersonIcon,
   TrashIcon,
 } from "@radix-ui/react-icons";
 import {
@@ -40,19 +41,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { INewsDataTable } from "@/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getInitials } from "@/lib/utils";
 import { Timestamp } from "firebase/firestore";
-import { useFetchDataTableNews } from "@/lib/react-query/queriesAndMutations";
 import { DataTableColumnHeader } from "@/components/data-table/column-header";
 import { DataTablePagination } from "@/components/data-table/pagination";
 import { Separator } from "@/components/ui/separator";
 import LagrgeScreenOnly from "@/components/shared/LagrgeScreenOnly";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { IPost } from "@/types";
+import {
+  useGetRecentPosts,
+  useGetUserById,
+} from "@/lib/react-query/queriesAndMutations";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DeleteDialog } from "@/components/shared/Dialogs";
 import { toast } from "@/components/ui/use-toast";
 
-export const columns: ColumnDef<INewsDataTable>[] = [
+export const columns: ColumnDef<IPost>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -78,12 +83,29 @@ export const columns: ColumnDef<INewsDataTable>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "type",
+    accessorKey: "uploadedBy",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Type" />
+      <DataTableColumnHeader column={column} title="By" />
     ),
-    cell: ({ row }) => <div className="w-[80px]">{row.getValue("type")}</div>,
-    enableSorting: false,
+
+    cell: ({ row }) => {
+      const { data: uploader } = useGetUserById(row.getValue("uploadedBy"));
+      return (
+        <div className="flex gap-2 items-center">
+          <Link to={`/profile.${uploader?.uid}`}>
+            <Avatar className="h-8 w-8 overflow-hidden rounded-full border">
+              <AvatarImage src={uploader?.photoURL} alt="Avatar" />
+              <AvatarFallback>
+                {getInitials(String(uploader?.displayName))}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+          <div className="max-w-[150px] truncate font-medium font-onest">
+            {uploader?.displayName}
+          </div>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "title",
@@ -92,7 +114,7 @@ export const columns: ColumnDef<INewsDataTable>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <div className="max-w-[100px] truncate font-medium">
+        <div className="max-w-[200px] truncate font-medium">
           {row.getValue("title")}
         </div>
       );
@@ -106,7 +128,7 @@ export const columns: ColumnDef<INewsDataTable>[] = [
 
     cell: ({ row }) => {
       return (
-        <div className="max-w-[100px] lg:max-w-[270px] xl:max-w-[450px] 2xl:max-w-[650px] truncate font-medium">
+        <div className="max-w-[100px] lg:max-w-[270px] xl:max-w-[450px] 2xl:max-w-[550px] truncate font-medium">
           {row.getValue("description")}
         </div>
       );
@@ -129,7 +151,7 @@ export const columns: ColumnDef<INewsDataTable>[] = [
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const news = row.original;
+      const post = row.original;
       const navigate = useNavigate();
       const [deletePreview, setDeletePreview] = React.useState<boolean>(false);
       return (
@@ -137,13 +159,13 @@ export const columns: ColumnDef<INewsDataTable>[] = [
           <DeleteDialog
             open={deletePreview}
             onOpenChange={setDeletePreview}
-            collection="news"
-            docId={news.id}
-            deleteType="News"
+            collection="posts"
+            docId={post.id}
+            deleteType="Post"
             onSuccess={() => {
               setDeletePreview(false);
               toast({
-                title: "News deleted successfully",
+                title: "Post deleted successfully",
               });
             }}
           />
@@ -155,21 +177,27 @@ export const columns: ColumnDef<INewsDataTable>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigate(`/edit-post/${post.id}`)}
+              >
                 <Pencil2Icon className="mr-2 h-4 w-4" />
                 <span>Edit</span>
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(news.id)}
+                onClick={() => navigator.clipboard.writeText(post.id)}
               >
                 <CopyIcon className="mr-2 h-4 w-4" />
                 <span>Copy ID</span>
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => navigate(`/news-details/${news.id}`)}
+                onClick={() => navigate(`/profile/${post.uploadedBy}`)}
               >
+                <PersonIcon className="mr-2 h-4 w-4" />
+                <span>Uploader profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/post/${post.id}`)}>
                 <IdCardIcon className="mr-2 h-4 w-4" />
-                <span>View news details</span>
+                <span>View post details</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="!text-rose-800 font-semibold"
@@ -187,7 +215,7 @@ export const columns: ColumnDef<INewsDataTable>[] = [
 ];
 
 export default function DataTableDemo() {
-  const { data, isLoading, isError, error } = useFetchDataTableNews();
+  const { data, isLoading, isError } = useGetRecentPosts();
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -227,7 +255,7 @@ export default function DataTableDemo() {
   if (isError) {
     return (
       <div className="text-center py-10 text-muted-foreground text-sm md:text-base">
-        Error: {error.message}
+        Error: Somthing went wrong!
       </div>
     );
   }
@@ -236,21 +264,19 @@ export default function DataTableDemo() {
     <div className="w-full">
       <LagrgeScreenOnly />
       <div className="space-y-0.5">
-        <h2 className="text-2xl font-bold tracking-tight">News data-table.</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Post data-table.</h2>
         <p className="text-muted-foreground text-sm md:text-base">
-          A news data table allows admins to change and delete data.
+          A post data table allows admins to change and delete data.
         </p>
         <Separator className="!my-4" />
       </div>
       <div></div>
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter news..."
-          value={
-            (table.getColumn("description")?.getFilterValue() as string) ?? ""
-          }
+          placeholder="Filter post..."
+          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("description")?.setFilterValue(event.target.value)
+            table.getColumn("title")?.setFilterValue(event.target.value)
           }
           className="h-8 w-[150px] lg:w-[250px]"
         />

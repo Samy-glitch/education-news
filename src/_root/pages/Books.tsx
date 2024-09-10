@@ -10,10 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useGetBooks } from "@/lib/react-query/queriesAndMutations";
 import { BookCard } from "@/components/shared/BookCard";
+import BookSkeleton from "@/components/skeletons/BookSkeleton";
 
 const Books = () => {
   const [classFilter, setClassFilter] = useState("");
@@ -125,25 +125,7 @@ const Books = () => {
         </div>
         <div className="box-border mt-4 overflow-visible">
           {isLoading ? (
-            skeletonItems.map((item) => (
-              <div
-                key={item.id}
-                className="w-[45%] md:w-[25%] lg:w-[20%] xl:w-[15%] 2xl:w-[10%] px-2 float-left overflow-visible mb-6 mr-4 relative"
-              >
-                <div className="overflow-hidden relative rounded-md shadow-md transition-all duration-300">
-                  <div className="w-full pb-[140%] relative">
-                    <Skeleton className="h-full w-full absolute rounded-md" />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1 mt-1">
-                  <Skeleton className="w-full h-4" />
-                  <Skeleton className="w-[80%] h-4" />
-                </div>
-                <Skeleton className="absolute -top-2 right-0 w-[67px] h-[22px] rounded-md shadow-md" />
-                <Skeleton className="absolute top-[18px] -right-4 w-[56px] h-[22px] rounded-md shadow-md" />
-                <div className="book-element-bg" />
-              </div>
-            ))
+            skeletonItems.map((item) => <BookSkeleton key={item.id} />)
           ) : !filteredBooks || error ? (
             <div className="h-[50vh] w-full flex items-center justify-center">
               <p className="text-muted-foreground">
@@ -151,7 +133,7 @@ const Books = () => {
               </p>
             </div>
           ) : filteredBooks.length > 0 ? (
-            filteredBooks.map((book) => <BookCard book={book} />)
+            filteredBooks.map((book) => <BookCard key={book.id} book={book} />)
           ) : (
             <div className="h-[50vh] w-full flex items-center justify-center">
               <p className="text-muted-foreground">No books found.</p>

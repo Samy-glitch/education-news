@@ -7,18 +7,19 @@ import { Separator } from "@/components/ui/separator";
 import TipTap from "@/components/tiptap/TiptapMain";
 import { CornerDownLeft, Info, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUploadImages } from "@/lib/react-query/queriesAndMutations";
+import {
+  useCreatePost,
+  useUploadImages,
+} from "@/lib/react-query/queriesAndMutations";
 import { Icons } from "@/components/shared/ui/icons";
 import { toast } from "@/components/ui/use-toast";
-import { addDoc, collection } from "firebase/firestore";
-import { db } from "@/lib/firebase/config";
 import { useUserContext } from "@/context/authContext";
 import { DiscardDialog } from "@/components/shared/Dialogs";
 
 const MIN_DIMENSION = 240;
 const MAX_WIDTH = 1024;
 
-const AskQuestion = () => {
+const CreatePost = () => {
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
   const tagsRef = useRef<HTMLTextAreaElement | null>(null);
   const [title, setTitle] = useState<string>("");
@@ -31,7 +32,12 @@ const AskQuestion = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
-
+  const {
+    mutate: mutateCreatePost,
+    isLoading: isPostCreating,
+    isError: isPostCreatingError,
+    isSuccess,
+  } = useCreatePost();
   const { mutate, isLoading: isUploading, isError, data } = useUploadImages();
   const { user: currentUser } = useUserContext();
 
@@ -145,8 +151,7 @@ const AskQuestion = () => {
     accept: {
       "image/*": [],
     },
-    multiple: true,
-    maxFiles: 10,
+    multiple: false,
   });
 
   const handleCancel = () => {
@@ -171,10 +176,10 @@ const AskQuestion = () => {
         setIsLoading(false);
         toast({
           variant: "destructive",
-          title: "Please fill the content",
+          title: "Please fill the description",
         });
         return;
-      } else if (!currentUser.id) {
+      } else if (!currentUser.uid) {
         console.log("user not found!");
         setIsLoading(false);
         toast({
@@ -184,7 +189,7 @@ const AskQuestion = () => {
         });
         return;
       } else if (localImages?.[0]) {
-        mutate({ imageBlobs: localImages, folderPath: "images/qna/" });
+        mutate({ imageBlobs: localImages, folderPath: "images/post/" });
       } else {
         uploadDataTodb();
       }
@@ -196,7 +201,7 @@ const AskQuestion = () => {
       const imagePath = data?.map((item) => item.path);
       const imageUrl = data?.map((item) => item.url);
 
-      await addDoc(collection(db, "qna"), {
+      mutateCreatePost({
         title: title,
         description: description,
         content: content,
@@ -207,14 +212,8 @@ const AskQuestion = () => {
         isAnswered: false,
         likes: [],
         date: new Date(),
-        uploadedBy: currentUser.id,
+        uploadedBy: currentUser.uid,
       });
-
-      toast({
-        title: "Question Posted!",
-      });
-
-      navigate("/other");
     } catch (err: any) {
       console.log(err.message);
       setIsLoading(false);
@@ -229,7 +228,17 @@ const AskQuestion = () => {
   };
 
   useEffect(() => {
-    if (isError) {
+    if (isSuccess) {
+      toast({
+        title: "Post Created!",
+      });
+
+      navigate("/other");
+    }
+  }, [isSuccess]);
+
+  useEffect(() => {
+    if (isError || isPostCreatingError) {
       setIsLoading(false);
       toast({
         variant: "destructive",
@@ -240,7 +249,7 @@ const AskQuestion = () => {
     if (data) {
       uploadDataTodb();
     }
-  }, [isError, data]);
+  }, [isError, data, isPostCreatingError]);
 
   return (
     <div>
@@ -250,9 +259,9 @@ const AskQuestion = () => {
         discardFunction={() => navigate("/other")}
       />
       <div className="space-y-0.5">
-        <h2 className="text-2xl font-bold tracking-tight">Ask Question</h2>
+        <h2 className="text-2xl font-bold tracking-tight">Create Post</h2>
         <p className="text-muted-foreground text-sm md:text-base">
-          Type your question in the form.
+          Type your Post in the form.
         </p>
         <Separator className="!my-4" />
       </div>
@@ -260,15 +269,15 @@ const AskQuestion = () => {
         <form className="flex flex-col gap-4">
           <div>
             <label
-              htmlFor="question-title"
+              htmlFor="post-title"
               className="block text-lg font-semibold mb-2"
             >
-              Question
+              Post Title
             </label>
             <textarea
-              id="question-title"
+              id="post-title"
               className="w-full p-2 bg-muted/60 rounded resize-none outline-none"
-              placeholder="Type question here..."
+              placeholder="Type post here..."
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               rows={2}
@@ -286,7 +295,7 @@ const AskQuestion = () => {
             <TipTap
               setContent={setContent}
               setDescription={setDescription}
-              placeholder="Type question description hear..."
+              placeholder="Type post description hear..."
             />
           </div>
           <div>
@@ -384,7 +393,7 @@ const AskQuestion = () => {
               e.preventDefault();
               handleCancel();
             }}
-            disabled={isLoading}
+            disabled={isLoading || isPostCreating}
           >
             Cancel
           </Button>
@@ -395,12 +404,12 @@ const AskQuestion = () => {
               e.preventDefault();
               handleSubmit();
             }}
-            disabled={isLoading}
+            disabled={isLoading || isPostCreating}
           >
-            {isLoading && (
+            {(isLoading || isPostCreating) && (
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {isLoading ? "Loading..." : isUploading ? "Uploading..." : "Post"}
+            {isLoading || isUploading ? "Uploading..." : "Post"}
           </Button>
         </div>
       </div>
@@ -408,4 +417,4 @@ const AskQuestion = () => {
   );
 };
 
-export default AskQuestion;
+export default CreatePost;

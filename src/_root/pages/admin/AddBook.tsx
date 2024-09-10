@@ -229,7 +229,7 @@ const AddBook = () => {
           variant: "destructive",
           title: "Please upload atlist one image.",
         });
-      } else if (!currentUser.id) {
+      } else if (!currentUser.uid) {
         console.log("user not found!");
         setIsLoading(false);
         toast({
@@ -265,7 +265,7 @@ const AddBook = () => {
         images: imageUrl || [],
         image: imageUrl?.[0] || "",
         imagesPath: imagePath || [],
-        uploadedBy: currentUser.id,
+        uploadedBy: currentUser.uid,
       });
 
       toast({

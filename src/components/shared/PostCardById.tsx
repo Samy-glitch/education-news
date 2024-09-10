@@ -1,8 +1,9 @@
 import { IPost, IUser } from "@/types";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { checkIsSaved, getInitials, timeAgo } from "@/lib/utils";
 import {
+  useGetPostById,
   useGetUserById,
   useSavePost,
 } from "@/lib/react-query/queriesAndMutations";
@@ -29,42 +30,46 @@ import { AlertCircle, Copy, Dot, Forward } from "lucide-react";
 import { toast } from "../ui/use-toast";
 import { Badge } from "../ui/badge";
 import { PostStats } from "./PostStats";
+import PostSkeleton from "../skeletons/PostSkeleton";
 
-const PostCard = ({ post }: { post: IPost }) => {
+const PostCardById = ({ postId }: { postId: string }) => {
   const { user } = useUserContext();
-  const [uploader, setUploder] = useState<IUser | null>(null);
+  const [uploader, setUploader] = useState<IUser | null>(null);
   const [saves, setSaves] = useState<string[]>([]);
+  const { data: postData, isLoading: isPostLoading } = useGetPostById(postId);
+  const [post, setPost] = useState<IPost | null>(null);
 
-  if (!post.uploadedBy) return;
+  useEffect(() => {
+    if (postData) {
+      setPost(postData);
+    }
+  }, [postData]);
 
-  const navigate = useNavigate();
-
-  const { data /* error, isLoading */ } = useGetUserById(post.uploadedBy);
-  const { data: data2 } = useGetUserById(user.uid);
+  const { data: uploaderData } = useGetUserById(post?.uploadedBy || "");
+  const { data: currentUserData } = useGetUserById(user?.uid || "");
   const { mutate: savePost } = useSavePost();
 
   useEffect(() => {
-    if (data) {
-      setUploder(data);
-    }
-  }, [data]);
+    if (uploaderData) setUploader(uploaderData);
+    if (currentUserData) setSaves(currentUserData.savedPosts);
+  }, [uploaderData, currentUserData]);
 
-  useEffect(() => {
-    if (data2) {
-      setSaves(data2.savedPosts);
-    }
-  }, [data2]);
+  if (!post || isPostLoading) {
+    return <PostSkeleton />;
+  }
 
-  const handleSave = () => {
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+
     if (!user || !user.uid) {
       toast({ description: "Please log in to save posts." });
       return;
     }
 
-    const hasSaved = saves.includes(post.id);
+    const hasSaved = saves.includes(postId);
     const newSaves = hasSaved
-      ? saves.filter((id) => id !== post.id)
-      : [...saves, post.id];
+      ? saves.filter((id) => id !== postId)
+      : [...saves, postId];
 
     setSaves(newSaves);
     savePost(
@@ -72,16 +77,14 @@ const PostCard = ({ post }: { post: IPost }) => {
       {
         onError: () => {
           setSaves(
-            hasSaved
-              ? [...saves, post.id]
-              : saves.filter((id) => id !== post.id)
+            hasSaved ? [...saves, postId] : saves.filter((id) => id !== postId)
           );
         },
       }
     );
   };
 
-  const link = window.location.origin + "/post/" + post.id;
+  const link = window.location.origin + "/post/" + postId;
 
   const copylink = async () => {
     try {
@@ -127,18 +130,14 @@ const PostCard = ({ post }: { post: IPost }) => {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            {(uploader?.uid === user.uid || user.isAadmin) && (
-              <>
-                <DropdownMenuItem
-                  onClick={() => navigate(`/edit-post/${post.id}`)}
-                >
-                  <Pencil2Icon className="mr-2 h-4 w-4" />
-                  <span>Edit</span>
-                </DropdownMenuItem>
-              </>
+            {uploader?.uid === user.uid && (
+              <DropdownMenuItem>
+                <Pencil2Icon className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={handleSave}>
-              {checkIsSaved(saves, post.id) ? (
+              {checkIsSaved(saves, postId) ? (
                 <>
                   <BookmarkFilledIcon className="mr-2 h-4 w-4" />
                   <span>Saved</span>
@@ -151,12 +150,10 @@ const PostCard = ({ post }: { post: IPost }) => {
               )}
             </DropdownMenuItem>
             {uploader?.uid !== user.uid && (
-              <>
-                <DropdownMenuItem>
-                  <AlertCircle className="mr-2 h-4 w-4" />
-                  <span>Report</span>
-                </DropdownMenuItem>
-              </>
+              <DropdownMenuItem>
+                <AlertCircle className="mr-2 h-4 w-4" />
+                <span>Report</span>
+              </DropdownMenuItem>
             )}
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
@@ -165,7 +162,7 @@ const PostCard = ({ post }: { post: IPost }) => {
               </DropdownMenuSubTrigger>
               <DropdownMenuPortal>
                 <DropdownMenuSubContent>
-                  <DropdownMenuItem onClick={() => copylink()}>
+                  <DropdownMenuItem onClick={copylink}>
                     <Copy className="mr-2 h-4 w-4" />
                     <span>Copy Link</span>
                   </DropdownMenuItem>
@@ -177,7 +174,7 @@ const PostCard = ({ post }: { post: IPost }) => {
       </div>
 
       <div className="px-4 pt-4">
-        <Link to={`/post/${post.id}`}>
+        <Link to={`/post/${postId}`}>
           <h1 className="text-base md:text-xl">{post.title}</h1>
           <div className="flex flex-wrap gap-2 mt-2">
             {post.tags.map((tag) => (
@@ -202,4 +199,4 @@ const PostCard = ({ post }: { post: IPost }) => {
   );
 };
 
-export default PostCard;
+export default PostCardById;

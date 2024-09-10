@@ -6,14 +6,20 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const INITIAL_USER: IUser = {
-  id: "",
-  name: "",
-  username: "",
+  uid: "",
+  displayName: "",
+  userName: "",
   email: "",
-  imageUrl: "",
+  photoURL: "",
   bio: "",
-  date: "",
+  emailVerified: false,
+  phoneNumber: "",
+  orders: 0,
+  savedPosts: [],
   badges: [],
+  type: "",
+  rank: "",
+  date: new Date(),
   isAadmin: false,
 };
 
@@ -43,15 +49,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           if (currentUser.exists()) {
             setUser({
-              id: currentUser.data()?.uid || "",
-              name: currentUser.data()?.displayName || "",
-              username: currentUser.data()?.userName || "",
-              email: currentUser.data()?.email || "",
-              imageUrl: currentUser.data()?.photoURL || "",
-              bio: currentUser.data()?.bio || "",
-              date: currentUser.data()?.date || "",
-              badges: currentUser.data()?.badges || [],
-              isAadmin: currentUser.data()?.isAadmin || false,
+              ...(currentUser.data() as IUser),
             });
             if (currentUser.data().userName === "") {
               navigate("/set-username");
@@ -81,18 +79,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const currentUser = await getDoc(docRef);
 
         if (currentUser.exists()) {
-          const userData = {
-            id: currentUser.data()?.uid || "",
-            name: currentUser.data()?.displayName || "",
-            username: currentUser.data()?.userName || "",
-            email: currentUser.data()?.email || "",
-            imageUrl: currentUser.data()?.photoURL || "",
-            bio: currentUser.data()?.bio || "",
-            date: currentUser.data()?.date || "",
-            badges: currentUser.data()?.badges || [],
-            isAadmin: currentUser.data()?.isAadmin || false,
-          };
-          setUser(userData);
+          setUser({ ...(currentUser.data() as IUser) });
           setIsAuthenticated(true);
           return true; // User is authenticated
         } else {

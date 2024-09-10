@@ -2,13 +2,6 @@ import ImageUploader from "@/components/shared/imageUploader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -155,17 +148,19 @@ const UpdateProfile = () => {
 
   return (
     <>
-      {isAuthenticated && currentUser?.id === id ? (
+      {isAuthenticated && currentUser?.uid === id ? (
         <div className="grid gap-6">
-          <Card className="border-0 md:border">
-            <CardHeader>
-              <CardTitle>Edit Profile</CardTitle>
-              <CardDescription className="text-xs md:text-sm">
+          <div>
+            <div className="space-y-0.5">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Edit Profile
+              </h2>
+              <p className="text-muted-foreground text-sm md:text-base">
                 Manage your account name, bio and avatar preferences.
-              </CardDescription>
+              </p>
               <Separator className="!my-4" />
-            </CardHeader>
-            <CardContent className="p-1 md:p-6">
+            </div>
+            <div className="p-1 md:p-6">
               <div>
                 <div className="flex justify-between gap-4 md:gap-6 flex-col">
                   <div className="flex items-center justify-center md:justify-normal">
@@ -232,8 +227,8 @@ const UpdateProfile = () => {
                   Save
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           <Dialog open={imagePreview} onOpenChange={setImagePreview}>
             <DialogContent>

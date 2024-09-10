@@ -190,7 +190,7 @@ const AddNews = () => {
           title: "Please select a type",
         });
         return;
-      } else if (!currentUser.id) {
+      } else if (!currentUser.uid) {
         console.log("user not found!");
         setIsLoading(false);
         toast({
@@ -223,7 +223,7 @@ const AddNews = () => {
         tags: tags,
         likes: [],
         date: new Date(),
-        uploadedBy: currentUser.id,
+        uploadedBy: currentUser.uid,
       });
 
       toast({

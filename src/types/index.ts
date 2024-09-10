@@ -24,6 +24,35 @@ export type IUpdateUser = {
   file: File[];
 };
 
+export type IPost = {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  image: string;
+  images: string[];
+  imagesPath: string[];
+  tags: string[];
+  isAnswered: boolean;
+  likes: string[];
+  date: Timestamp;
+  uploadedBy: string;
+};
+
+export type ICreatePost = {
+  title: string;
+  description: string;
+  content: string;
+  image: string;
+  images: string[];
+  imagesPath: string[];
+  tags: string[];
+  isAnswered: boolean;
+  likes: string[];
+  date: any;
+  uploadedBy: string;
+};
+
 export type INewses = {
   id: string;
   date: Timestamp;
@@ -98,15 +127,21 @@ export type IBookDataTable = {
 };
 
 export type IUser = {
-  id: string;
-  name: string;
-  username: string;
+  uid: string;
+  displayName: string;
+  userName: string;
   email: string;
-  imageUrl: string;
+  photoURL: string;
   bio: string;
-  date: string;
-  badges: Array<string>;
+  emailVerified: boolean;
+  phoneNumber: string;
+  orders: number;
+  savedPosts: string[];
+  badges: string[];
+  type: string;
+  rank: string;
   isAadmin: boolean;
+  date: any;
 };
 
 export type IUploder = {
@@ -124,19 +159,4 @@ export type INewUser = {
   email: string;
   username: string;
   password: string;
-};
-
-export type IQnA = {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  image: string;
-  images: string[];
-  imagesPath: string[];
-  tags: string[];
-  isAnswered: boolean;
-  likes: string[];
-  date: Timestamp;
-  uploadedBy: string;
 };

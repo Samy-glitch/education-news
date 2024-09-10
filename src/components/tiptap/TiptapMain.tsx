@@ -303,18 +303,18 @@ const MenuBar = () => {
   );
 };
 
-const content = ``;
-
 type IsetFunction = (setContent: string) => void;
 
 const TipTap = ({
   setContent,
   setDescription,
   placeholder,
+  startContent,
 }: {
   setContent: IsetFunction;
   setDescription?: IsetFunction;
   placeholder?: string;
+  startContent?: string;
 }) => {
   const extensions = [
     MathExtension.configure({ evaluation: true }),
@@ -343,7 +343,7 @@ const TipTap = ({
       <EditorProvider
         slotBefore={<MenuBar />}
         extensions={extensions}
-        content={content}
+        content={startContent}
         onUpdate={({ editor }) => {
           setContent(String(editor.getHTML()));
           if (setDescription) {

@@ -63,7 +63,7 @@ const ImageUploader = ({
     <div className="pt-6">
       <div
         {...getRootProps()}
-        className={`border-dashed border-2 p-6 rounded-lg cursor-pointer mb-2 outline-none flex flex-col items-center justify-center gap-8 py-8 ${
+        className={`border-dashed border-2 p-6 rounded-lg cursor-pointer mb-2 outline-none flex flex-col items-center justify-center gap-8 py-8 aspect-square ${
           isDragActive ? "border-blue-500" : "border-gray-300"
         } ${localImage && "hidden"}`}
       >
@@ -84,17 +84,17 @@ const ImageUploader = ({
             fill="currentColor"
           ></path>
           <path
-            stroke-width="4"
+            strokeWidth="4"
             d="m6 35 10.693-9.802a2 2 0 0 1 2.653-.044L32 36m-4-5 4.773-4.773a2 2 0 0 1 2.615-.186L42 31M30 12h12m-6-6v12"
             data-follow-stroke="currentColor"
             stroke="currentColor"
           ></path>
         </svg>
-        {isDragActive ? (
-          <p>Drop the files here ...</p>
-        ) : (
-          <p>Drag 'n' drop some files here, or click to select files</p>
-        )}
+        <p className="text-sm text-muted-foreground text-center">
+          {isDragActive
+            ? "Drop the files here ..."
+            : "Drag 'n' drop some files here, or click to select files"}
+        </p>
       </div>
       {error && <p className="text-red font-bold">{error}</p>}
       {localImage && (

@@ -11,7 +11,7 @@ export enum QUERY_KEYS {
   GET_POSTS = "getPosts",
   GET_POST_BY_ID = "getPostById",
   GET_RECENT_POSTS = "getRecentPosts",
-  GET_INFINITE_POSTS = "getInfinitePosts",
+  GET_POSTS_BY_USER = "getPostsByUser",
 
   // NEWS KEYS
   GET_NEWS = "getNews",
@@ -23,12 +23,6 @@ export enum QUERY_KEYS {
   // BOOK KEYS
   GET_BOOKS = "getBooks",
   GET_BOOK_BY_ID = "getBookById",
-
-  // Q&A KEYS
-
-  GET_QNAS = "getQnas",
-  GET_QNA_BY_ID = "getQnaById",
-  GET_RECENT_QNA = "getRecentQna",
 
   //  SEARCH KEYS
   SEARCH_POSTS = "getSearchPosts",

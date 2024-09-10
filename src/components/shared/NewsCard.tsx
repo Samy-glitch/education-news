@@ -30,7 +30,7 @@ export const NewsCard = ({ news }: { news: INewses }) => {
               </h3>
               <NewsStats
                 news={news}
-                userId={user.id}
+                userId={user.uid}
                 className="absolute right-0 top-0 px-4 py-1 bg-muted/60 shadow rounded-md"
               />
             </div>

@@ -1,5 +1,12 @@
 import * as React from "react";
-import { DotsHorizontalIcon, MixerHorizontalIcon } from "@radix-ui/react-icons";
+import {
+  CopyIcon,
+  DotsHorizontalIcon,
+  IdCardIcon,
+  MixerHorizontalIcon,
+  Pencil2Icon,
+  TrashIcon,
+} from "@radix-ui/react-icons";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -39,6 +46,9 @@ import { DataTableColumnHeader } from "@/components/data-table/column-header";
 import { DataTablePagination } from "@/components/data-table/pagination";
 import { Separator } from "@/components/ui/separator";
 import LagrgeScreenOnly from "@/components/shared/LagrgeScreenOnly";
+import { useNavigate } from "react-router-dom";
+import { DeleteDialog } from "@/components/shared/Dialogs";
+import { toast } from "@/components/ui/use-toast";
 
 export const columns: ColumnDef<IBookDataTable>[] = [
   {
@@ -135,28 +145,55 @@ export const columns: ColumnDef<IBookDataTable>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const books = row.original;
-
+      const navigate = useNavigate();
+      const [deletePreview, setDeletePreview] = React.useState<boolean>(false);
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Edit</DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(books.id)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuItem>View books details</DropdownMenuItem>
-            <DropdownMenuItem className="!text-rose-800 font-semibold">
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DeleteDialog
+            open={deletePreview}
+            onOpenChange={setDeletePreview}
+            collection="books"
+            docId={books.id}
+            deleteType="Book"
+            onSuccess={() => {
+              setDeletePreview(false);
+              toast({
+                title: "Book deleted successfully",
+              });
+            }}
+          />
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <DotsHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Pencil2Icon className="mr-2 h-4 w-4" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(books.id)}
+              >
+                <CopyIcon className="mr-2 h-4 w-4" />
+                <span>Copy ID</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate(`/book/${books.id}`)}>
+                <IdCardIcon className="mr-2 h-4 w-4" />
+                <span>View book details</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="!text-rose-800 font-semibold"
+                onClick={() => setDeletePreview(true)}
+              >
+                <TrashIcon className="mr-2 h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       );
     },
   },

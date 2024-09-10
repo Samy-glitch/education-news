@@ -7,7 +7,6 @@ import {
   Landing,
   Home,
   News,
-  QandA,
   Books,
   Other,
   Profile,
@@ -16,7 +15,7 @@ import {
   AdminMain,
   Settings,
   Orders,
-  AskQuestion,
+  CreatePost,
   Search,
   Book,
   AddNews,
@@ -24,7 +23,10 @@ import {
   AddBook,
   BookTable,
   FallBackPage,
-  Question,
+  Post,
+  EditPost,
+  PostTable,
+  Message,
 } from "./_root/pages";
 import SetUsername from "./_auth/forms/SetUsername";
 import SignInForm from "./_auth/forms/SignInForm";
@@ -51,7 +53,7 @@ const App = () => {
 
   return (
     <>
-      <main className="flex h-screen">
+      <div className="flex h-screen">
         <Routes>
           <Route index element={<Landing />} />
           <Route path="*" element={<FallBackPage />} />
@@ -64,8 +66,7 @@ const App = () => {
             <Route path="/home" element={<Home />} />
             <Route path="/news" element={<News />} />
             <Route path="/news-details/:id" element={<NewsDetails />} />
-            <Route path="/question/:id" element={<Question />} />
-            <Route path="/q&a" element={<QandA />} />
+            <Route path="/post/:id" element={<Post />} />
             <Route path="/books" element={<Books />} />
             <Route path="/book/:id" element={<Book />} />
             <Route path="/other" element={<Other />} />
@@ -74,8 +75,10 @@ const App = () => {
             <Route path="/settings" element={<Settings />} />
             <Route path="/search" element={<Search />} />
             <Route element={<AuthOnlyLayout />}>
+              <Route path="/message" element={<Message />} />
               <Route path="/orders" element={<Orders />} />
-              <Route path="/ask-question" element={<AskQuestion />} />
+              <Route path="/create-post" element={<CreatePost />} />
+              <Route path="/edit-post/:id" element={<EditPost />} />
             </Route>
             <Route element={<AdminLayout />}>
               <Route path="/test" element={<Test />} />
@@ -83,11 +86,12 @@ const App = () => {
               <Route path="/admin/add-news" element={<AddNews />} />
               <Route path="/admin/add-book" element={<AddBook />} />
               <Route path="/admin/data-table/news" element={<NewsTable />} />
+              <Route path="/admin/data-table/posts" element={<PostTable />} />
               <Route path="/admin/data-table/book" element={<BookTable />} />
             </Route>
           </Route>
         </Routes>
-      </main>
+      </div>
       <Toaster />
     </>
   );

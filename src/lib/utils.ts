@@ -173,16 +173,33 @@ export const formatDate = (input: number | string | Timestamp): string => {
 };
 
 export const getInitials = (name: string): string => {
-  return name
+  const newName = String(name)
     .trim()
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase())
     .join("")
     .substring(0, 2);
+  return newName;
 };
 
 export const checkIsLiked = (likeList: string[], userId: string) => {
   return likeList.includes(userId);
+};
+
+export const checkIsSaved = (SavedList: string[], postId: string) => {
+  return SavedList.includes(postId);
+};
+
+export const orderByDate = (): string => {
+  const date = new Date();
+
+  const year = date.getFullYear().toString(); // Full year (e.g., 2024)
+  const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Month, padded to 2 digits
+  const day = date.getDate().toString().padStart(2, "0"); // Day, padded to 2 digits
+  const hours = date.getHours().toString().padStart(2, "0"); // Hours, padded to 2 digits
+  const minutes = date.getMinutes().toString().padStart(2, "0"); // Minutes, padded to 2 digits
+
+  return `${year}${month}${day}${hours}${minutes}`;
 };
 
 export const useOnScreen = (

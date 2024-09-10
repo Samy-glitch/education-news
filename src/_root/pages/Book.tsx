@@ -52,17 +52,17 @@ const Book = () => {
       setBookPrice(Number(data.price));
       setPrivewImage(data.images?.[0]);
       setBookLikes(data.likes ? data.likes.length : 0);
-      if (user?.id && data.likes) {
-        setHasLiked(data.likes.includes(user.id));
+      if (user?.uid && data.likes) {
+        setHasLiked(data.likes.includes(user.uid));
       }
     }
     if (error) {
       console.log(error);
     }
-  }, [data, error, user?.id]);
+  }, [data, error, user?.uid]);
 
   const handleLikeToggle = (bookId: string) => {
-    if (!bookId || !user?.id) {
+    if (!bookId || !user?.uid) {
       setIsLoginDilog(true);
       return;
     }
@@ -75,7 +75,7 @@ const Book = () => {
     }
     setBookLikes(updatedLikes);
     setHasLiked(newHasLiked);
-    likeOrUnlikeBook({ bookId, userId: user.id, hasLiked: newHasLiked });
+    likeOrUnlikeBook({ bookId, userId: user.uid, hasLiked: newHasLiked });
   };
 
   useEffect(() => {

@@ -10,6 +10,9 @@ import {
 import { Button } from "../ui/button";
 import { QRCode } from "react-qrcode-logo";
 import { useNavigate } from "react-router-dom";
+import { useDeleteDocumentWithFiles } from "@/lib/react-query/queriesAndMutations";
+import { useState } from "react";
+import { Icons } from "./ui/icons";
 
 export const DiscardDialog = ({
   open,
@@ -37,6 +40,71 @@ export const DiscardDialog = ({
           </DialogClose>
           <Button type="button" onClick={discardFunction}>
             Discard
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export const DeleteDialog = ({
+  open,
+  onOpenChange,
+  collection,
+  deleteType,
+  docId,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  collection: string;
+  deleteType: string;
+  docId: string;
+  onSuccess: () => void;
+}) => {
+  const deleteDocMutation = useDeleteDocumentWithFiles(collection);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleDelete = () => {
+    if (docId === "") {
+      return;
+    }
+    setIsLoading(true);
+    deleteDocMutation.mutate(docId, {
+      onSuccess: () => {
+        onSuccess();
+      },
+      onError: (error) => {
+        console.error("Failed to delete document and files:", error);
+      },
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete {deleteType}?</DialogTitle>
+          <DialogDescription>
+            This can’t be undone and you’ll lose your changes.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button className="mt-4 md:mt-0" type="button" variant="secondary">
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isLoading}
+          >
+            {isLoading && (
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Delete
           </Button>
         </DialogFooter>
       </DialogContent>
